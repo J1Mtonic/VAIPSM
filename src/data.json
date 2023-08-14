@@ -1,0 +1,30 @@
+{
+    "testnet": {
+        "VAI": {
+            "img": "VAIlogo",
+            "decimals": 18,
+            "address": "0x5fFbE5302BadED40941A403228E6AD03f93752d9"
+        },
+        "USDT": {
+            "img": "USDTlogo",
+            "decimals": 18,
+            "address": "0xA11c8D9DC9b66E209Ef60F0C8D969D3CD988782c"
+        },
+        "VAIPSMcontract": "0xB21E69eef4Bc1D64903fa28D9b32491B1c0786F1",
+        "chainId": 97
+    },
+    "mainnet": {
+        "VAI": {
+            "img": "VAIlogo",
+            "decimals": 18,
+            "address": "0x4BD17003473389A42DAF6a0a729f6Fdb328BbBd7"
+        },
+        "USDT": {
+            "img": "USDTlogo",
+            "decimals": 18,
+            "address": "0x55d398326f99059fF775485246999027B3197955"
+        },
+        "VAIPSMcontract": "0xC138aa4E424D1A8539e8F38Af5a754a2B7c3Cc36",
+        "chainId": 56
+    }
+}
