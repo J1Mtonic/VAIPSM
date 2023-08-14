@@ -57,7 +57,7 @@ function Swap(props) {
   useEffect(() => {
     updateBalances();
     checkTokenApproval();
-    changeAmount(tokenFromAmount);
+    checkSwap(tokenFromAmount);
   }, [isConnected, tokenFrom, tokenFromAmount]);
 
   useEffect(() => {
@@ -94,13 +94,13 @@ function Swap(props) {
 
     setTokenFromAmount(prevValue => {
       if (prevValue !== value) {
-        changeAmount(value);
+        checkSwap(value);
       }
       return value;
     });
   }
 
-  const changeAmount = async (value) => {
+  const checkSwap = async (value) => {
     if (value === '0') return;
     let functionName = '';
     if (tokenFrom.ticker === "VAI") {
@@ -115,7 +115,7 @@ function Swap(props) {
           address: VAIPSMcontract,
           abi: PegStabilityABI,
           functionName: functionName,
-          args: [value],
+          args: [value.toString()],
         });
         const resultAmount = (1000000 * formatEther(result)).toFixed(2);
         setTokenToAmount(resultAmount.endsWith('.00') ? parseInt(resultAmount, 10).toString() : resultAmount);
