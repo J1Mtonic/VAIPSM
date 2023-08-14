@@ -5,7 +5,7 @@ import VAIlogo from '../vai.svg';
 import USDTlogo from '../usdt.svg';
 import { readContract, writeContract, fetchBalance, erc20ABI } from '@wagmi/core';
 import { PegStabilityABI } from '../abi';
-import { formatEther, formatUnits, parseUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 
 function Swap(props) {
   const { address, isConnected, networkConfig } = props;
@@ -92,12 +92,7 @@ function Swap(props) {
       value = value.slice(1);
     }
 
-    setTokenFromAmount(prevValue => {
-      if (prevValue !== value) {
-        checkSwap(value);
-      }
-      return value;
-    });
+    setTokenFromAmount(value);
   }
 
   const checkSwap = async (value) => {
@@ -117,8 +112,10 @@ function Swap(props) {
           functionName: functionName,
           args: [value.toString()],
         });
-        const resultAmount = (1000000 * formatEther(result)).toFixed(2);
-        setTokenToAmount(resultAmount.endsWith('.00') ? parseInt(resultAmount, 10).toString() : resultAmount);
+        console.log("Result type:", typeof result);
+        console.log("Result value:", result);
+        const resultAmount = parseFloat(formatUnits(result, 12)).toFixed(2);
+        setTokenToAmount(resultAmount.endsWith('.00') ? parseInt(resultAmount, 10).toString() : resultAmount);        
       } catch (error) {
         console.error(`Error calling ${functionName}:`, error);
       }
