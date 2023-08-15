@@ -15,7 +15,6 @@ const networkConfig = tokenData[networkKey];
 const chainsToUse = USE_TESTNET ? [bscTestnet] : [bsc];
 
 const {
-  chains,
   publicClient,
   webSocketPublicClient
 } = configureChains(

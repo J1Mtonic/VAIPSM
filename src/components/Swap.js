@@ -12,8 +12,9 @@ function Swap(props) {
   const { VAIPSMcontract, chainId } = networkConfig;
   const [tokenFromAmount, setTokenFromAmount] = useState(0);
   const [tokenToAmount, setTokenToAmount] = useState(0);
-  const [tokenFrom, setTokenFrom] = useState({ ticker: "VAI", ...networkConfig.VAI });
-  const [tokenTo, setTokenTo] = useState({ ticker: "USDT", ...networkConfig.USDT });
+  const tokenFrom = { ticker: "USDT", ...networkConfig.USDT };
+  const tokenTo = { ticker: "VAI", ...networkConfig.VAI };
+  const [swapDirection, setSwapDirection] = useState("SwapUSDTForVAI");
   const [vaiBalance, setVaiBalance] = useState("---");
   const [usdtBalance, setUsdtBalance] = useState("---");
   const [isApproved, setIsApproved] = useState(false);
@@ -98,10 +99,10 @@ function Swap(props) {
   const checkSwap = async (value) => {
     if (value === '0') return;
     let functionName = '';
-    if (tokenFrom.ticker === "VAI") {
-      functionName = 'previewSwapVAIForStable';
-    } else if (tokenFrom.ticker === "USDT") {
+    if (swapDirection === "SwapUSDTForVAI") {
       functionName = 'previewSwapStableForVAI';
+    } else {
+      functionName = 'previewSwapVAIForStable';
     }
 
     if (value && functionName) {
@@ -112,12 +113,11 @@ function Swap(props) {
           functionName: functionName,
           args: [value.toString()],
         });
-        console.log("Result type:", typeof result);
-        console.log("Result value:", result);
         const resultAmount = parseFloat(formatUnits(result, 12)).toFixed(2);
-        setTokenToAmount(resultAmount.endsWith('.00') ? parseInt(resultAmount, 10).toString() : resultAmount);        
+        setTokenToAmount(resultAmount.endsWith('.00') ? parseInt(resultAmount, 10).toString() : resultAmount);
       } catch (error) {
         console.error(`Error calling ${functionName}:`, error);
+        openNotificationError('Error', 'Error calling Swap Preview.');
       }
     } else {
       setTokenToAmount(0);
@@ -125,10 +125,9 @@ function Swap(props) {
   }
 
   const switchTokens = () => {
-    setTokenFrom(tokenTo);
-    setTokenTo(tokenFromRef.current);
+    setSwapDirection(prev => prev === "SwapUSDTForVAI" ? "SwapVAIForUSDT" : "SwapUSDTForVAI");
     checkTokenApproval();
-  }
+  };
 
   const updateBalances = async () => {
     if (!isConnected) return;
@@ -140,24 +139,18 @@ function Swap(props) {
       address: address,
       token: tokenTo.address
     });
-    if (tokenFrom.ticker === "VAI") {
-      setVaiBalance(fromBalance.formatted);
-      setUsdtBalance(toBalance.formatted);
-    } else {
-      setUsdtBalance(fromBalance.formatted);
-      setVaiBalance(toBalance.formatted);
-    }
+    setUsdtBalance(fromBalance.formatted);
+    setVaiBalance(toBalance.formatted);
   };
 
   const checkTokenApproval = async () => {
     if (!isConnected) return;
 
     const requiredAmount = parseUnits(tokenFromAmount.toString(), 6);
-    let approved = false;
     const allowance = await checkApproval(tokenFrom.address, VAIPSMcontract);
     const formattedAllowance = formatUnits(allowance.toString(), 18);
 
-    approved = Number(formattedAllowance) * Math.pow(10, 6) >= Number(requiredAmount);
+    const approved = Number(formattedAllowance) * Math.pow(10, 6) >= Number(requiredAmount);
     setIsApproved(approved);
   }
 
@@ -173,6 +166,7 @@ function Swap(props) {
       return allowance;
     } catch (error) {
       console.error("Error checking token approval:", error);
+      openNotificationError('Error', 'Checking token approval failed.');
       return false;
     }
   }
@@ -200,10 +194,10 @@ function Swap(props) {
       await handleApprove(tokenFrom.address, VAIPSMcontract);
     } else {
       let functionName;
-      if (tokenFrom.ticker === "VAI") {
-        functionName = 'swapVAIForStable';
-      } else if (tokenFrom.ticker === "USDT") {
+      if (swapDirection === "SwapUSDTForVAI") {
         functionName = 'swapStableForVAI';
+      } else {
+        functionName = 'swapVAIForStable';
       }
 
       if (functionName) {
@@ -231,9 +225,14 @@ function Swap(props) {
       <div className='tradeBox'>
         <div className='tradeBoxHeader'>
           <h4>VAI PSM</h4>
+          <h4>
+            {swapDirection === "SwapUSDTForVAI" ? "Swap USDT For VAI" : "Swap VAI For USDT"}
+          </h4>
         </div>
         <div className="inputGroup">
-          <label>From</label>
+          <label>
+            {swapDirection === "SwapUSDTForVAI" ? "You Swap" : "You Get"}
+          </label>
           <div className="inputWrapper">
             <Input placeholder='0' value={tokenFromAmount} onChange={handleInputChange} onFocus={handleInputFocus} />
             <div className='assetLogo'>
@@ -243,18 +242,18 @@ function Swap(props) {
           </div>
           <span className="walletBalance">
             <span className="balanceLabel">Wallet Balance:</span>
-            <span className="balanceAmount">
-              {tokenFrom.ticker === "VAI" ? `${vaiBalance} VAI` : `${usdtBalance} USDT`}
-            </span>
+            <span className="balanceAmount">{`${usdtBalance} USDT`}</span>
           </span>
         </div>
         <div className="switchButton" onClick={switchTokens}>
-          <SwapOutlined style={{ transform: 'rotate(90deg)' }} className='switchArrow' />
+          <SwapOutlined className='switchArrow' />
         </div>
         <div className="inputGroup">
-          <label>To</label>
+          <label>
+            {swapDirection === "SwapUSDTForVAI" ? "You Get" : "You Swap"}
+          </label>
           <div className="inputWrapper">
-            <Input placeholder='0' value={tokenToAmount} disabled={true} />
+            <Input placeholder='0' className="vaiInput" value={tokenToAmount} disabled={true} />
             <div className='assetLogo'>
               <img src={icons[tokenTo.ticker]} alt={`${tokenTo.ticker} logo`} />
               <span>{tokenTo.ticker}</span>
@@ -262,9 +261,7 @@ function Swap(props) {
           </div>
           <span className="walletBalance">
             <span className="balanceLabel">Wallet Balance:</span>
-            <span className="balanceAmount">
-              {tokenTo.ticker === "VAI" ? `${vaiBalance} VAI` : `${usdtBalance} USDT`}
-            </span>
+            <span className="balanceAmount">{`${vaiBalance} VAI`}</span>
           </span>
         </div>
         <div

@@ -9,7 +9,7 @@ function Header(props) {
       await disconnect();
       setResetBalances(true); 
     } else {
-      connect();
+      await connect();
     }
   }
 

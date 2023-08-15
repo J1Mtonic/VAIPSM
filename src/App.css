@@ -42,6 +42,11 @@ header {
   color: grey;
 }
 
+.vaiInput {
+  background-color: transparent !important;
+  border: 1px solid #3a4157 !important;
+}
+
 label {
   display: block;
   text-align: left;
@@ -78,9 +83,18 @@ label {
   padding: 20px;
 }
 
+.tradeBoxHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  width: 100%; 
+  margin-bottom: 10px;
+}
+
 .tradeBoxHeader h4 {
-  font-size: 20px;
   margin: 1px 0 15px;
+  font-size: 20px;
+  text-align: left;
 }
 
 .walletBalance {
