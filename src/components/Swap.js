@@ -225,7 +225,7 @@ function Swap(props) {
     <>
       <div className='tradeBox'>
         <div className='tradeBoxHeader'>
-          <h4>VAI PSM</h4>
+          <h4>VAI PSM "Testnet"</h4>
           <h4>
             {swapDirection === "SwapUSDTForVAI" ? "Swap USDT For VAI" : "Swap VAI For USDT"}
           </h4>
