@@ -131,16 +131,17 @@ function Swap(props) {
 
   const updateBalances = async () => {
     if (!isConnected) return;
-    const fromBalance = await fetchBalance({
-      address: address,
-      token: tokenFrom.address
-    });
-    const toBalance = await fetchBalance({
-      address: address,
-      token: tokenTo.address
-    });
-    setUsdtBalance(fromBalance.formatted);
-    setVaiBalance(toBalance.formatted);
+    const [newUsdtBalance, newVaiBalance] = await Promise.all([
+      fetchBalance({ address, token: tokenFrom.address }),
+      fetchBalance({ address, token: tokenTo.address })
+    ]);
+
+    if (newUsdtBalance.formatted !== usdtBalance) {
+      setUsdtBalance(newUsdtBalance.formatted);
+    }
+    if (newVaiBalance.formatted !== vaiBalance) {
+      setVaiBalance(newVaiBalance.formatted);
+    }
   };
 
   const checkTokenApproval = async () => {
