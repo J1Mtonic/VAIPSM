@@ -11,12 +11,12 @@ function App(props) {
     connector: new InjectedConnector(),
   });
   const [resetBalances, setResetBalances] = useState(false);
-
+  
   return (
     <div className="App">
       <Header connect={connect} isConnected={isConnected} address={address} setResetBalances={setResetBalances} />
       <div className="mainWindow">
-        <Swap isConnected={isConnected} address={address} resetBalances={resetBalances} setResetBalances={setResetBalances} networkConfig={props.networkConfig} />
+        <Swap isConnected={isConnected} address={address} resetBalances={resetBalances} setResetBalances={setResetBalances} networkConfig={props.networkConfig} useTestnet={props.useTestnet} />
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <WagmiConfig config={config}>
-      <App networkConfig={networkConfig} />
+      <App networkConfig={networkConfig} useTestnet={USE_TESTNET} />
     </WagmiConfig>
   </React.StrictMode>
 );

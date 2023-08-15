@@ -26,11 +26,14 @@
 }
 
 header {
-  height: 100px;
+  height: 80px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 50px;
+  padding-right: 20px;
+  flex-wrap: wrap;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .inputGroup {
@@ -62,25 +65,27 @@ label {
 
 .mainlogo {
   width: 250px;
-  height: 47px;
-  padding-right: 20px;
+  height: auto;
+  padding-left: 20px;
 }
 
 .mainWindow {
-  margin-top: 40px;
+  margin-top: 20px;
   display: flex;
   justify-content: center;
 }
 
 .tradeBox {
   align-items: flex-start;
-  width: 400px;
+  width: 100%;
   background-color: #1E2431;
-  min-height: 300px;
+  min-height: 350px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   padding: 20px;
+  max-width: 420px;
+  box-sizing: border-box;
 }
 
 .tradeBoxHeader {
@@ -93,7 +98,7 @@ label {
 
 .tradeBoxHeader h4 {
   margin: 1px 0 15px;
-  font-size: 20px;
+  font-size: 18px;
   text-align: left;
 }
 
@@ -108,6 +113,7 @@ label {
 }
 
 /* Buttons */
+
 .connectButton, .swapButton {
   padding: 10px 20px;
   border-radius: 8px;
@@ -128,8 +134,7 @@ label {
 .swapButton {
   background-color: #3A78FF;
   width: 100%;
-  height: 55px;
-  font-size: 20px;
+  font-size: 18px;
   color: #ffffff;
   margin: 8px 0 1px;
   padding: 15px 0;
@@ -168,4 +173,25 @@ label {
   border: 1px solid #3A78FF;
   color: white;
   cursor: pointer;
+}
+
+@media (max-width: 440px) {
+  header {
+    padding-right: 10px;
+  }
+
+  .mainlogo {
+    width: 200px;
+    height: auto;
+    padding-left: 10px;
+  }
+
+  .connectButton {
+    padding: 10px 10px;
+    font-size: 14px;
+  }
+
+  .tradeBoxHeader h4 {
+    font-size: 16px;
+  }
 }

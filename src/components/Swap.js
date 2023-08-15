@@ -1,4 +1,4 @@
-import { notification, Input } from 'antd';
+import { notification, Input, Modal } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { useState, useEffect, useRef } from 'react';
 import VAIlogo from '../vai.svg';
@@ -18,6 +18,8 @@ function Swap(props) {
   const [vaiBalance, setVaiBalance] = useState("---");
   const [usdtBalance, setUsdtBalance] = useState("---");
   const [isApproved, setIsApproved] = useState(false);
+  const relevantTokenAmount = swapDirection === "SwapUSDTForVAI" ? tokenFromAmount : tokenToAmount;
+  const relevantTicker = swapDirection === "SwapUSDTForVAI" ? tokenFrom.ticker : tokenTo.ticker;
   const tokenFromRef = useRef(tokenFrom);
   const tokenToRef = useRef(tokenTo);
   const icons = {
@@ -147,13 +149,13 @@ function Swap(props) {
   const checkTokenApproval = async () => {
     if (!isConnected) return;
 
-    const requiredAmount = parseUnits(tokenFromAmount.toString(), 6);
-    const allowance = await checkApproval(tokenFrom.address, VAIPSMcontract);
+    const requiredAmount = parseUnits(relevantTokenAmount.toString(), 6);
+    const allowance = await checkApproval(relevantTicker === "USDT" ? tokenFrom.address : tokenTo.address, VAIPSMcontract);
     const formattedAllowance = formatUnits(allowance.toString(), 18);
 
     const approved = Number(formattedAllowance) * Math.pow(10, 6) >= Number(requiredAmount);
     setIsApproved(approved);
-  }
+  };  
 
   const checkApproval = async (tokenAddress, spender) => {
     try {
@@ -179,6 +181,35 @@ function Swap(props) {
         abi: erc20ABI,
         functionName: 'approve',
         args: [spender, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"],
+        chainId: chainId
+      });
+      console.log(`Approval transaction hash: ${hash}`);
+      checkTokenApproval();
+      openNotificationSuccess('Success', 'Token approved successfully!');
+    } catch (error) {
+      console.error("Error approving token:", error);
+      openNotificationError('Error', 'Token approval failed.');
+    }
+  }
+
+  const askForRevoke = (tokenAddress) => {
+    if (!isConnected) return;
+    Modal.confirm({
+        title: 'Please confirm',
+        content: '¿Do you want to Revoke it?',
+        cancelText: 'No',
+        okText: 'Yes',
+        onOk: () => handleRevoke(tokenAddress, VAIPSMcontract),
+    });
+  };
+
+  const handleRevoke = async (tokenAddress, spender) => {
+    try {
+      const { hash } = await writeContract({
+        address: tokenAddress,
+        abi: erc20ABI,
+        functionName: 'approve',
+        args: [spender, "0x0"],
         chainId: chainId
       });
       console.log(`Approval transaction hash: ${hash}`);
@@ -225,7 +256,7 @@ function Swap(props) {
     <>
       <div className='tradeBox'>
         <div className='tradeBoxHeader'>
-          <h4>VAI PSM "Testnet"</h4>
+          <h4>VAI PSM {props.useTestnet ? '"Testnet"' : ''}</h4>
           <h4>
             {swapDirection === "SwapUSDTForVAI" ? "Swap USDT For VAI" : "Swap VAI For USDT"}
           </h4>
@@ -236,7 +267,7 @@ function Swap(props) {
           </label>
           <div className="inputWrapper">
             <Input placeholder='0' value={tokenFromAmount} onChange={handleInputChange} onFocus={handleInputFocus} />
-            <div className='assetLogo'>
+            <div className='assetLogo' onClick={() => askForRevoke(tokenFrom.address)}>
               <img src={icons[tokenFrom.ticker]} alt={`${tokenFrom.ticker} logo`} />
               <span>{tokenFrom.ticker}</span>
             </div>
@@ -255,7 +286,7 @@ function Swap(props) {
           </label>
           <div className="inputWrapper">
             <Input placeholder='0' className="vaiInput" value={tokenToAmount} disabled={true} />
-            <div className='assetLogo'>
+            <div className='assetLogo' onClick={() => askForRevoke(tokenTo.address)}>
               <img src={icons[tokenTo.ticker]} alt={`${tokenTo.ticker} logo`} />
               <span>{tokenTo.ticker}</span>
             </div>
@@ -268,9 +299,9 @@ function Swap(props) {
         <div
           className='swapButton'
           onClick={handleSwap}
-          disabled={!tokenFromAmount || parseFloat(tokenFromAmount) === 0 || !isConnected}
+          disabled={!relevantTokenAmount || parseFloat(relevantTokenAmount) === 0 || !isConnected}
         >
-          {isApproved ? 'Swap' : `Approve ${tokenFrom.ticker}`}
+          {isApproved ? 'Swap' : `Approve ${relevantTicker}`}
         </div>
       </div>
     </>
