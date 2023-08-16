@@ -10,18 +10,21 @@ import { formatUnits, parseUnits } from 'viem';
 function Swap(props) {
   const { address, isConnected, networkConfig } = props;
   const { VAIPSMcontract, chainId } = networkConfig;
+  const [swapDirection, setSwapDirection] = useState("SwapUSDTForVAI");
   const [tokenFromAmount, setTokenFromAmount] = useState(0);
   const [tokenToAmount, setTokenToAmount] = useState(0);
   const tokenFrom = { ticker: "USDT", ...networkConfig.USDT };
   const tokenTo = { ticker: "VAI", ...networkConfig.VAI };
-  const [swapDirection, setSwapDirection] = useState("SwapUSDTForVAI");
   const [vaiBalance, setVaiBalance] = useState("---");
   const [usdtBalance, setUsdtBalance] = useState("---");
   const [isApproved, setIsApproved] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const relevantTokenAmount = swapDirection === "SwapUSDTForVAI" ? tokenFromAmount : tokenToAmount;
   const relevantTicker = swapDirection === "SwapUSDTForVAI" ? tokenFrom.ticker : tokenTo.ticker;
+  const prevTokenFromAmountRef = useRef();
   const tokenFromRef = useRef(tokenFrom);
   const tokenToRef = useRef(tokenTo);
+  const switchClickedRef = useRef(false);
   const icons = {
     VAI: VAIlogo,
     USDT: USDTlogo
@@ -58,9 +61,15 @@ function Swap(props) {
   }, [isConnected]);
 
   useEffect(() => {
+    if (switchClickedRef.current) {
+      checkSwap(tokenFromAmount);
+      switchClickedRef.current = false;
+    } else if (prevTokenFromAmountRef.current !== tokenFromAmount) {
+      checkSwap(tokenFromAmount);
+    }
+    prevTokenFromAmountRef.current = tokenFromAmount;
     updateBalances();
     checkTokenApproval();
-    checkSwap(tokenFromAmount);
   }, [isConnected, tokenFrom, tokenFromAmount]);
 
   useEffect(() => {
@@ -79,27 +88,23 @@ function Swap(props) {
 
   const handleInputChange = (e) => {
     let value = e.target.value;
-
     if (value === '') {
       setTokenFromAmount('0');
       setTokenToAmount('0');
       return;
     }
-
     const isValid = /^\d{1,8}$/.test(value);
     if (!isValid) {
       return;
     }
-
     if (tokenFromAmount === '0' && value !== '0.') {
       value = value.slice(1);
     }
-
     setTokenFromAmount(value);
-  }
+  };
 
   const checkSwap = async (value) => {
-    if (value === '0') return;
+    if (value.toString() === "0" || value === '') return;
     let functionName = '';
     if (swapDirection === "SwapUSDTForVAI") {
       functionName = 'previewSwapStableForVAI';
@@ -113,31 +118,35 @@ function Swap(props) {
           address: VAIPSMcontract,
           abi: PegStabilityABI,
           functionName: functionName,
-          args: [value.toString()],
+          args: [parseUnits(value.toString(), tokenFrom.decimals)],
         });
-        const resultAmount = parseFloat(formatUnits(result, 12)).toFixed(2);
+        const resultAmount = parseFloat(formatUnits(result, 18)).toFixed(2);
         setTokenToAmount(resultAmount.endsWith('.00') ? parseInt(resultAmount, 10).toString() : resultAmount);
       } catch (error) {
         console.error(`Error calling ${functionName}:`, error);
-        openNotificationError('Error', 'Error calling Swap Preview.');
+        openNotificationError('Error: Error calling Swap Preview', `${error.message}`);
       }
     } else {
       setTokenToAmount(0);
     }
-  }
-
-  const switchTokens = () => {
-    setSwapDirection(prev => prev === "SwapUSDTForVAI" ? "SwapVAIForUSDT" : "SwapUSDTForVAI");
-    checkTokenApproval();
   };
 
+  const switchTokens = () => {
+    switchClickedRef.current = true;
+    setIsLoading(true);
+    setSwapDirection(prev => {
+      const newDirection = prev === "SwapUSDTForVAI" ? "SwapVAIForUSDT" : "SwapUSDTForVAI";
+      return newDirection;
+    });
+    checkTokenApproval();
+  };
+  
   const updateBalances = async () => {
     if (!isConnected) return;
     const [newUsdtBalance, newVaiBalance] = await Promise.all([
       fetchBalance({ address, token: tokenFrom.address }),
       fetchBalance({ address, token: tokenTo.address })
     ]);
-
     if (newUsdtBalance.formatted !== usdtBalance) {
       setUsdtBalance(newUsdtBalance.formatted);
     }
@@ -147,15 +156,17 @@ function Swap(props) {
   };
 
   const checkTokenApproval = async () => {
-    if (!isConnected) return;
+    if (!isConnected || relevantTokenAmount.toString() == "0" || relevantTokenAmount === '') return;
+    console.log("checkTokenApproval executed");
 
-    const requiredAmount = parseUnits(relevantTokenAmount.toString(), 6);
+    const requiredAmount = parseUnits(relevantTokenAmount.toString(), tokenFrom.decimals);
     const allowance = await checkApproval(relevantTicker === "USDT" ? tokenFrom.address : tokenTo.address, VAIPSMcontract);
     const formattedAllowance = formatUnits(allowance.toString(), 18);
 
-    const approved = Number(formattedAllowance) * Math.pow(10, 6) >= Number(requiredAmount);
+    const approved = Number(formattedAllowance) * Math.pow(10, tokenFrom.decimals) >= Number(requiredAmount);
     setIsApproved(approved);
-  };  
+    setIsLoading(false);
+  };
 
   const checkApproval = async (tokenAddress, spender) => {
     try {
@@ -169,10 +180,45 @@ function Swap(props) {
       return allowance;
     } catch (error) {
       console.error("Error checking token approval:", error);
-      openNotificationError('Error', 'Checking token approval failed.');
+      openNotificationError('Error: Checking token approval failed', `${error.message}`);
       return false;
     }
-  }
+  };
+
+  const handleSwap = async () => {
+    let tokenToApprove;
+    let functionName;
+
+    if (swapDirection === "SwapUSDTForVAI") {
+      tokenToApprove = tokenFrom;
+      functionName = 'swapStableForVAI';
+    } else {
+      tokenToApprove = tokenTo;
+      functionName = 'swapVAIForStable';
+    }
+
+    if (!isApproved) {
+      await handleApprove(tokenToApprove.address, VAIPSMcontract);
+    } else {
+      if (functionName) {
+        try {
+          const { hash } = await writeContract({
+            address: VAIPSMcontract,
+            abi: PegStabilityABI,
+            functionName: functionName,
+            args: [address, parseUnits(tokenFromAmount.toString(), tokenFrom.decimals)],
+            chainId: chainId
+          });
+          console.log("Transaction hash:", hash);
+          await updateBalances();
+          openNotificationSuccess('Success', 'Swap executed successfully!');
+        } catch (error) {
+          console.error(`Error calling ${functionName}:`, error);
+          openNotificationError('Error: Swap execution failed', `${error.message}`);
+        }
+      }
+    }
+  };
 
   const handleApprove = async (tokenAddress, spender) => {
     try {
@@ -183,24 +229,14 @@ function Swap(props) {
         args: [spender, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"],
         chainId: chainId
       });
+      setIsLoading(true);
       console.log(`Approval transaction hash: ${hash}`);
-      checkTokenApproval();
       openNotificationSuccess('Success', 'Token approved successfully!');
+      await checkTokenApproval();
     } catch (error) {
       console.error("Error approving token:", error);
-      openNotificationError('Error', 'Token approval failed.');
+      openNotificationError('Error: Token approval failed', `${error.message}`);
     }
-  }
-
-  const askForRevoke = (tokenAddress) => {
-    if (!isConnected) return;
-    Modal.confirm({
-        title: 'Please confirm',
-        content: '¿Do you want to Revoke it?',
-        cancelText: 'No',
-        okText: 'Yes',
-        onOk: () => handleRevoke(tokenAddress, VAIPSMcontract),
-    });
   };
 
   const handleRevoke = async (tokenAddress, spender) => {
@@ -212,45 +248,26 @@ function Swap(props) {
         args: [spender, "0x0"],
         chainId: chainId
       });
-      console.log(`Approval transaction hash: ${hash}`);
-      checkTokenApproval();
-      openNotificationSuccess('Success', 'Token approved successfully!');
+      setIsLoading(true);
+      console.log(`Revoke transaction hash: ${hash}`);
+      openNotificationSuccess('Success', 'Token revoked successfully!');
+      await checkTokenApproval();
     } catch (error) {
-      console.error("Error approving token:", error);
-      openNotificationError('Error', 'Token approval failed.');
+      console.error("Error revoking token:", error);
+      openNotificationError('Error: Token revoked failed', `${error.message}`);
     }
-  }
+  };
 
-  const handleSwap = async () => {
-    if (!isApproved) {
-      await handleApprove(tokenFrom.address, VAIPSMcontract);
-    } else {
-      let functionName;
-      if (swapDirection === "SwapUSDTForVAI") {
-        functionName = 'swapStableForVAI';
-      } else {
-        functionName = 'swapVAIForStable';
-      }
-
-      if (functionName) {
-        try {
-          const { hash } = await writeContract({
-            address: VAIPSMcontract,
-            abi: PegStabilityABI,
-            functionName: functionName,
-            args: [address, parseUnits(tokenFromAmount.toString(), 6)],
-            chainId: chainId
-          });
-          console.log("Transaction hash:", hash);
-          updateBalances();
-          openNotificationSuccess('Success', 'Swap executed successfully!');
-        } catch (error) {
-          console.error(`Error calling ${functionName}:`, error);
-          openNotificationError('Error', 'Swap execution failed.');
-        }
-      }
-    }
-  }
+  const askForRevoke = (tokenAddress) => {
+    if (!isConnected) return;
+    Modal.confirm({
+      title: 'Please confirm',
+      content: '¿Do you want to Revoke it?',
+      cancelText: 'No',
+      okText: 'Yes',
+      onOk: () => handleRevoke(tokenAddress, VAIPSMcontract),
+    });
+  };
 
   return (
     <>
@@ -266,7 +283,13 @@ function Swap(props) {
             {swapDirection === "SwapUSDTForVAI" ? "You Swap" : "You Get"}
           </label>
           <div className="inputWrapper">
-            <Input placeholder='0' value={tokenFromAmount} onChange={handleInputChange} onFocus={handleInputFocus} />
+            <Input
+              placeholder='0'
+              value={tokenFromAmount}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              min={props.useTestnet && swapDirection !== "SwapVAIForUSDT" ? '0' : '100'}
+            />
             <div className='assetLogo' onClick={() => askForRevoke(tokenFrom.address)}>
               <img src={icons[tokenFrom.ticker]} alt={`${tokenFrom.ticker} logo`} />
               <span>{tokenFrom.ticker}</span>
@@ -296,13 +319,15 @@ function Swap(props) {
             <span className="balanceAmount">{`${vaiBalance} VAI`}</span>
           </span>
         </div>
-        <div
-          className='swapButton'
-          onClick={handleSwap}
-          disabled={!relevantTokenAmount || parseFloat(relevantTokenAmount) === 0 || !isConnected}
-        >
-          {isApproved ? 'Swap' : `Approve ${relevantTicker}`}
-        </div>
+        {isConnected ? (
+          <div
+            className='swapButton'
+            onClick={handleSwap}
+            disabled={isLoading || !relevantTokenAmount || parseFloat(relevantTokenAmount) === 0}
+          >
+            {isLoading ? 'Loading...' : isApproved ? 'Swap' : `Approve ${relevantTicker}`}
+          </div>
+        ) : null}
       </div>
     </>
   )

@@ -7,7 +7,7 @@
         },
         "USDT": {
             "img": "USDTlogo",
-            "decimals": 18,
+            "decimals": 6,
             "address": "0xA11c8D9DC9b66E209Ef60F0C8D969D3CD988782c"
         },
         "VAIPSMcontract": "0xB21E69eef4Bc1D64903fa28D9b32491B1c0786F1",

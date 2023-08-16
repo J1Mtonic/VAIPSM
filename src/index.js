@@ -8,7 +8,7 @@ import { bsc, bscTestnet } from '@wagmi/core/chains'
 import {publicProvider} from "wagmi/providers/public"
 import tokenData from './data.json'
 
-const USE_TESTNET = true;
+const USE_TESTNET = false;
 
 const networkKey = USE_TESTNET ? "testnet" : "mainnet";
 const networkConfig = tokenData[networkKey];
