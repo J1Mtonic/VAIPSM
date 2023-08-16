@@ -1,5 +1,8 @@
 .App {
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .assetLogo {
@@ -19,7 +22,8 @@
   margin-left: -10px;
 }
 
-.assetLogo img, .logo {
+.assetLogo img,
+.logo {
   width: 30px;
   height: 30px;
   padding-right: 20px;
@@ -34,6 +38,7 @@ header {
   flex-wrap: wrap;
   max-width: 800px;
   margin: 0 auto;
+  width: 90%;
 }
 
 .inputGroup {
@@ -57,7 +62,8 @@ label {
   margin-bottom: 8px;
 }
 
-.leftH, .rightH {
+.leftH,
+.rightH {
   display: flex;
   align-items: center;
   gap: 20px;
@@ -70,9 +76,12 @@ label {
 }
 
 .mainWindow {
+  flex: 1;
   margin-top: 20px;
   display: flex;
   justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tradeBox {
@@ -91,8 +100,8 @@ label {
 .tradeBoxHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center; 
-  width: 100%; 
+  align-items: center;
+  width: 100%;
   margin-bottom: 10px;
 }
 
@@ -114,7 +123,8 @@ label {
 
 /* Buttons */
 
-.connectButton, .swapButton {
+.connectButton,
+.swapButton {
   padding: 10px 20px;
   border-radius: 8px;
   font-weight: bold;
@@ -174,6 +184,63 @@ label {
   color: white;
   cursor: pointer;
 }
+
+/* Footer */
+
+.footer-container {
+  background: #1E2431;
+  padding: 15px 50px;
+}
+
+.footer-center {
+  text-align: center;
+}
+
+.footer-buttons .ant-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: #3a4157;
+  border: 1px solid #3a4157;
+  color: #5F6783;
+  transition: 0.3s;
+  margin-bottom: 15px;
+}
+
+.footer-buttons .ant-btn:hover {
+  border: 1px solid #3A78FF;
+  cursor: pointer;
+}
+
+.footer-buttons .ant-btn:hover .anticon-github {
+  color: white;
+}
+
+.footer-buttons .ant-btn:hover .anticon-twitter {
+  color: #1DA1F2;
+}
+
+.footer-love {
+  color: red;
+}
+
+.footer-primary {
+  color: #AAB3CA;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #49EBBF, #20BDFF, #4068FF) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  font-weight: bold !important;
+}
+
+
+/* Mobile */
 
 @media (max-width: 440px) {
   header {
