@@ -11,7 +11,7 @@ function Footer() {
             <div className="footer-center footer-buttons">
                 <Space size="middle">
                     <Button icon={<GithubOutlined />} href="https://github.com/J1Mtonic/VAIPSM" target="_blank" />
-                    <Button icon={<TwitterOutlined />} href="https://https://twitter.com/Venus_Community" target="_blank" />
+                    <Button icon={<TwitterOutlined />} href="https://twitter.com/Venus_Community" target="_blank" />
                 </Space>
             </div>
             <div className="footer-center">
