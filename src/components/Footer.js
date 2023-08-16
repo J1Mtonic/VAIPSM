@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Typography, Space, Button } from 'antd';
-import { GithubOutlined, TwitterOutlined } from '@ant-design/icons';
+import { GithubOutlined, TwitterOutlined, BookOutlined } from '@ant-design/icons';
 
 const { Footer: AntFooter } = Layout;
 const { Text, Link } = Typography;
@@ -12,6 +12,7 @@ function Footer() {
                 <Space size="middle">
                     <Button icon={<GithubOutlined />} href="https://github.com/J1Mtonic/VAIPSM" target="_blank" />
                     <Button icon={<TwitterOutlined />} href="https://twitter.com/Venus_Community" target="_blank" />
+                    <Button icon={<BookOutlined />} href="https://docs-v4.venus.io/whats-new/psm" target="_blank" />
                 </Space>
             </div>
             <div className="footer-center">
