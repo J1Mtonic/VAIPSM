@@ -1,13 +1,12 @@
-import Logo from '../logo.svg'
-import { disconnect } from '@wagmi/core'
-
+import Logo from '../logo.svg';
+import { disconnect } from '@wagmi/core';
 function Header(props) {
   const { connect, isConnected, address, setResetBalances } = props;
 
   const handleButtonClick = async () => {
     if (isConnected) {
       await disconnect();
-      setResetBalances(true); 
+      setResetBalances(true);
     } else {
       await connect();
     }
@@ -24,7 +23,7 @@ function Header(props) {
         </div>
       </div>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

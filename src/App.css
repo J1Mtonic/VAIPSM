@@ -222,8 +222,13 @@ label {
 .footer-buttons .ant-btn:hover .anticon-twitter {
   color: #1DA1F2;
 }
+
 .footer-buttons .ant-btn:hover .anticon-book {
   color: #9CB9FF;
+}
+
+.footer-buttons .ant-btn:hover .anticon-info-circle {
+  color: white;
 }
 
 .footer-love {
@@ -242,6 +247,38 @@ label {
   font-weight: bold !important;
 }
 
+/* Modal */
+
+.ant-modal-root .ant-modal-content {
+  background-color: #1E2431 !important;
+}
+
+.ant-modal-root .ant-modal-header {
+  background-color: #1E2431 !important;
+}
+
+.ant-modal-root .ant-modal-title {
+  color: #AAB3CA !important;
+}
+
+.ant-modal-root .ant-modal-close-x {
+  color: #AAB3CA !important;
+}
+
+.ant-modal-root .ant-modal-body {
+  color: #AAB3CA !important;
+  background-color: #1E2431 !important;
+}
+
+.ant-modal-root .ant-modal-footer button {
+  background-color: #3A78FF !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.ant-modal-root .ant-modal-footer button:hover {
+  background-color: #265ACC !important;
+}
 
 /* Mobile */
 
